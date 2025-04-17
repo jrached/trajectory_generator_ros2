@@ -9,6 +9,7 @@
 #include "trajectory_generator_ros2/trajectories/Circle.hpp"
 #include "trajectory_generator_ros2/trajectories/Line.hpp"
 #include "trajectory_generator_ros2/trajectories/Boomerang.hpp"
+#include "trajectory_generator_ros2/trajectories/Doublet.hpp"
 
 #include <geometry_msgs/msg/quaternion.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
@@ -161,7 +162,7 @@ bool TrajectoryGenerator::readParameters()
         }
         traj_ = std::make_unique<Circle>(alt_, r, cx, cy, v_goals, t_traj, circle_accel, dt_);
     }
-    else if(traj_type == "Line" || traj_type == "Boomerang"){
+    else if(traj_type == "Line" || traj_type == "Boomerang" || traj_type == "Doublet"){
         // line trajectory parameters
         double Ax, Ay, Bx, By, v_line, a1, a3;
         if (!this->get_parameter("Ax", Ax)) return false;
@@ -192,6 +193,11 @@ bool TrajectoryGenerator::readParameters()
             traj_ = std::make_unique<Boomerang>(alt_, Eigen::Vector3d(Ax, Ay, alt_),
                                        Eigen::Vector3d(Bx, By, alt_),
                                        v_goals, a1, a3, dt_);
+        }
+        else if (traj_type == "Doublet") {
+            traj_ = std::make_unique<Doublet>(alt_, Eigen::Vector3d(Ax, Ay, alt_),
+                                        Eigen::Vector3d(Bx, By, alt_), 
+                                        v_goals, a1, a3, dt_);
         }
     }
     else{
@@ -347,7 +353,7 @@ void TrajectoryGenerator::pubCB(){
         double eps = 0.10; //TODO: Change back to 0.10
         // if close to the takeoff_alt, switch to HOVERING
         // RCLCPP_INFO(this->get_logger(), "Takeoff alt: %f", alt_);
-        RCLCPP_INFO(this->get_logger(), "Pose z: %f", pose_.position.z);
+        // RCLCPP_INFO(this->get_logger(), "Pose z: %f", pose_.position.z);
         if(fabs(takeoff_alt - pose_.position.z) < eps and goal_.p.z >= takeoff_alt){
             flight_mode_ = HOVERING;
             RCLCPP_INFO(this->get_logger(), "Take off completed");
