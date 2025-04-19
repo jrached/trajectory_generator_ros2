@@ -11,13 +11,10 @@
 namespace trajectory_generator { 
 
 // class constructor
-Doublet::Doublet(double alt, Eigen::Vector3d A, Eigen::Vector3d B,
-         std::vector<double> v_goals, double a1, double a3, double dt): 
-         alt_(alt), A_(A), B_(B), v_goals_(v_goals), a1_(a1), a3_(a3), Trajectory(dt) {
-            
-            theta_ = atan2(B_.y() - A_.y(), B_.x() - A_.x());
-
-         }
+Doublet::Doublet(double alt, Eigen::Vector3d A,
+         std::vector<double> v_goals, double period, double yaw, double decel, double dt): 
+         alt_(alt), A_(A), v_goals_(v_goals), period_(period), theta_(yaw), decel_(decel), Trajectory(dt) {
+}
 
 Doublet::~Doublet(){
 }
@@ -40,8 +37,9 @@ void Doublet::generateTraj(std::vector<snapstack_msgs2::msg::Goal>& goals,
 
     //Compute t_AB
     double v_goal = v_goals_[0]; 
-    double d_AB = (B_ - A_).norm();
-    double t_AB = d_AB / v_goal;
+    // double d_AB = (B_ - A_).norm();
+    // double t_AB = d_AB / v_goal;
+    double t_AB = period_ / 2; 
 
     // Generate first step
     index_msgs[goals.size() - 1] = "Starting doublet"; 
@@ -113,15 +111,15 @@ void Doublet::generateStopTraj(std::vector<snapstack_msgs2::msg::Goal>& goals,
     std::unordered_map<int, std::string> index_msgs_tmp;
 
     // Add initial element to goals vector 
-    v_stopped = std::max(0.0, v_stopped - a3_*dt_);
-    goals_tmp.push_back(createLineGoal(goals[pub_index].p.x, goals[pub_index].p.y, v_stopped, -a3_, theta_stopped));
+    v_stopped = std::max(0.0, v_stopped - decel_*dt_);
+    goals_tmp.push_back(createLineGoal(goals[pub_index].p.x, goals[pub_index].p.y, v_stopped, -decel_, theta_stopped));
 
     index_msgs_tmp[0] = "Decelerating to 0.0 m/s";
 
-    // Decelerate to 0 m/s at -a3_ m/s^2
+    // Decelerate to 0 m/s at -decel_ m/s^2
     while (v_stopped > 0){
-        v_stopped = std::max(0.0, v_stopped - a3_*dt_);
-        goals_tmp.push_back(createLineGoal(goals_tmp.back().p.x, goals_tmp.back().p.y, v_stopped, -a3_, theta_stopped));
+        v_stopped = std::max(0.0, v_stopped - decel_*dt_);
+        goals_tmp.push_back(createLineGoal(goals_tmp.back().p.x, goals_tmp.back().p.y, v_stopped, -decel_, theta_stopped));
     }
 
     index_msgs_tmp[goals_tmp.size() - 1] = "Vehicle stopped"; 
@@ -137,9 +135,16 @@ void Doublet::generateStopTraj(std::vector<snapstack_msgs2::msg::Goal>& goals,
 bool Doublet::trajectoryInsideBounds(double xmin, double xmax, 
                                     double ymin, double ymax, 
                                     double zmin, double zmax){
+    
+    // Use instant acceleration model to estimate out of bounds 
+    Eigen::Vector3d B;
+    B.x() = A_.x() + v_goals_[0] * period_ / 2;
+    B.y() = A_.y() + v_goals_[0] * period_ / 2;
+    B.z() = alt_;
+
     return
         isPointInsideBounds(xmin, xmax, ymin, ymax, zmin, zmax, A_) and
-        isPointInsideBounds(xmin, xmax, ymin, ymax, zmin, zmax, B_);
+        isPointInsideBounds(xmin, xmax, ymin, ymax, zmin, zmax, B);
 }
 
 // TODO: Most likely can delete this 

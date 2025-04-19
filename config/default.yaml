@@ -17,23 +17,22 @@ SQ01:
       t_traj: 20.0  # time to follow each trajectory, s
       circle_accel:  0.4  # max acceleration allowed, m/s^2. Should be small
 
-      # # Line trajectory parameters
+      # Line trajectory parameters
       # Ax: -3.75    # Ax: -4.25
       # Ay: -3.0    # Ay: -3.5
-      # Bx: 4.0    # Bx: 4.5
-      # By: 3.75    # By: 4.25
+      Bx: 4.0    # Bx: 4.5
+      By: 3.75    # By: 4.25
       # v_line: 1.0 #3.0  # m/s
-      # line_accel: 1.5
-      # line_decel: 1.0  # should be smaller for safety
+      line_accel: 1.5
+      line_decel: 1.0  # should be smaller for safety
 
       # Doublet parameters
       Ax: 0.0    # Ax: -4.25
       Ay: 0.0    # Ay: -3.5
-      Bx: 1.41    # Bx: 4.5
-      By: 1.41    # By: 4.25
       v_line: 1.0 #3.0  # m/s
-      line_accel: 1.5
-      line_decel: 1.0  # should be smaller for safety
+      period: 4.0 # 2.0 seconds per step 
+      yaw: 0.7854 # pi/4
+      decel: 1.0  # In case of emergency stop
 
       # Other params
       vel_initpos: 0.4  # m/s horizontal speed towards initial point

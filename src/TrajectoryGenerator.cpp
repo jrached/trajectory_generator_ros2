@@ -113,6 +113,11 @@ bool TrajectoryGenerator::readParameters()
     this->declare_parameter("line_accel", 0.0);
     this->declare_parameter("line_decel", 0.0);
 
+    // Doublet params
+    this->declare_parameter("decel", 0.0);
+    this->declare_parameter("period", 0.0);
+    this->declare_parameter("yaw", 0.0); 
+
     // Other params
     this->declare_parameter("vel_initpos", 0.0);
     this->declare_parameter("vel_take", 0.0);
@@ -162,7 +167,7 @@ bool TrajectoryGenerator::readParameters()
         }
         traj_ = std::make_unique<Circle>(alt_, r, cx, cy, v_goals, t_traj, circle_accel, dt_);
     }
-    else if(traj_type == "Line" || traj_type == "Boomerang" || traj_type == "Doublet"){
+    else if(traj_type == "Line" || traj_type == "Boomerang"){
         // line trajectory parameters
         double Ax, Ay, Bx, By, v_line, a1, a3;
         if (!this->get_parameter("Ax", Ax)) return false;
@@ -194,11 +199,37 @@ bool TrajectoryGenerator::readParameters()
                                        Eigen::Vector3d(Bx, By, alt_),
                                        v_goals, a1, a3, dt_);
         }
-        else if (traj_type == "Doublet") {
-            traj_ = std::make_unique<Doublet>(alt_, Eigen::Vector3d(Ax, Ay, alt_),
-                                        Eigen::Vector3d(Bx, By, alt_), 
-                                        v_goals, a1, a3, dt_);
+    }
+    else if (traj_type == "Doublet"){
+        // Check that parameter exits
+        double Ax, Ay, v_line, period, yaw, decel;
+        if (!this->get_parameter("Ax", Ax)) return false; 
+        if (!this->get_parameter("Ay", Ay)) return false; 
+        if (!this->get_parameter("v_line", v_line)) return false;
+        if (!this->get_parameter("period", period)) return false; 
+        if (!this->get_parameter("yaw", yaw)) return false; 
+        if (!this->get_parameter("decel", decel)) return false;
+
+        // Check that period and velocity are greater than zero
+        if (v_line <= 0) {
+            RCLCPP_ERROR(this->get_logger(), "Velocity must be greater than zero.");
+            return false;
+        } 
+        if (period <= 0) {
+            RCLCPP_ERROR(this->get_logger(), "Doublet period must be greater than zero.");
+            return false;
         }
+        if (decel <= 0) {
+            RCLCPP_ERROR(this->get_logger(), "Deceleration must be greater than zero.");
+            return false;
+        }
+
+        // Create goals vector and append doublet velocity
+        std::vector<double> v_goals; 
+        v_goals.push_back(v_line);
+
+        // Create Doublet trajectory object 
+        traj_ = std::make_unique<Doublet>(alt_, Eigen::Vector3d(Ax, Ay, alt_), v_goals, period, yaw, decel, dt_);
     }
     else{
         RCLCPP_ERROR(this->get_logger(), "Trajectory type not valid.");
