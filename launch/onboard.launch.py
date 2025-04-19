@@ -20,16 +20,6 @@ def generate_launch_description():
         default_value=EnvironmentVariable('VEHNUM', default_value='01'),
         description='Vehicle number'
     )
-    period_arg = DeclareLaunchArgument(
-        'period', 
-        default_value='4.0',
-        description='Doublet period'
-    )
-    vel_arg = DeclareLaunchArgument(
-        'vel',
-        default_value='1.0',
-        description='Doublet magnitude'
-    )
 
     # Namespaec from veh and num arguements
     namespace = [LaunchConfiguration('veh'), LaunchConfiguration('num')]
@@ -45,11 +35,7 @@ def generate_launch_description():
             get_package_share_directory('trajectory_generator_ros2'),
             'config',
             'default.yaml'
-        ), 
-        {'period': LaunchConfiguration('period'),
-         'v_line': LaunchConfiguration('vel'),
-        },
-        ]
+        )]
     )
 
     launch_group = GroupAction([trajectory_generator_node])
