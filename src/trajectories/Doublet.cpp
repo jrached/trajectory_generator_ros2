@@ -138,8 +138,8 @@ bool Doublet::trajectoryInsideBounds(double xmin, double xmax,
     
     // Use instant acceleration model to estimate out of bounds 
     Eigen::Vector3d B;
-    B.x() = A_.x() + v_goals_[0] * period_ / 2;
-    B.y() = A_.y() + v_goals_[0] * period_ / 2;
+    B.x() = A_.x() + cos(theta_) * v_goals_[0] * period_ / 2;
+    B.y() = A_.y() + sin(theta_) * v_goals_[0] * period_ / 2;
     B.z() = alt_;
 
     return
