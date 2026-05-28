@@ -17,6 +17,7 @@
 #include "trajectory_generator_ros2/trajectories/M.hpp"
 #include "trajectory_generator_ros2/trajectories/I.hpp"
 #include "trajectory_generator_ros2/trajectories/T.hpp"
+#include "trajectory_generator_ros2/trajectories/Csv.hpp"
 
 #include <geometry_msgs/msg/quaternion.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
@@ -145,6 +146,10 @@ bool TrajectoryGenerator::readParameters()
     this->declare_parameter("v_line", 0.0);
     this->declare_parameter("line_accel", 0.0);
     this->declare_parameter("line_decel", 0.0);
+
+    // Csv params (replay a pre-generated Goal CSV)
+    this->declare_parameter("csv_path", std::string(""));
+    this->declare_parameter("stop_accel", 3.0);
 
     // Other params
     this->declare_parameter("vel_initpos", 0.0);
@@ -381,6 +386,16 @@ bool TrajectoryGenerator::readParameters()
             cx, cy, T_length, T_width, v_goals.empty() ? -1.0 : v_goals[0], t_traj, orientation);
 
         traj_ = std::make_unique<T>(cx, cy, T_length, T_width, alt_, v_goals, t_traj, orientation, dt_);
+    }
+    else if(traj_type == "Csv"){
+        std::string csv_path;
+        if (!this->get_parameter("csv_path", csv_path) || csv_path.empty()){
+            RCLCPP_ERROR(this->get_logger(), "csv_path must be set for traj_type Csv.");
+            return false;
+        }
+        double stop_accel;
+        if (!this->get_parameter("stop_accel", stop_accel)) return false;
+        traj_ = std::make_unique<Csv>(csv_path, stop_accel, dt_);
     }
     else{
         RCLCPP_ERROR(this->get_logger(), "Trajectory type not valid.");

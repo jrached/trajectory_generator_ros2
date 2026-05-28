@@ -6,7 +6,16 @@ SQ01:
       pub_freq: 100.0  # Hz
 
       # Type of trajectory
-      traj_type: T # Circle , Line , Boomerang , Figure8, Square, Reciprocating, Rectangle, Bounce, M, I, T
+      traj_type: Csv # Circle , Line , Boomerang , Figure8, Square, Reciprocating, Rectangle, Bounce, M, I, T, Csv
+
+      # Csv trajectory parameters (replay a pre-generated Goal CSV)
+      # CSV header: t,x,y,z,vx,vy,vz,ax,ay,az,jx,jy,jz,yaw,dyaw,power,mode_xy,mode_z
+      # csv_path is normally filled by onboard.launch.py (defaults to the bundled
+      # ref_traj file); override with csv_path:=/abs/path.csv. Set pub_freq above
+      # to the CSV sample rate (100 Hz for dt=0.01) for real-time playback.
+      # Takeoff and the flight to the CSV's first point are handled automatically.
+      csv_path: ""     # absolute path; empty -> launch file fills the default
+      stop_accel: 3.0  # [m/s^2] deceleration if END is pressed mid-trajectory
 
       # T trajectory parameters
       T_length: 3.0   # height of the T (vertical)
